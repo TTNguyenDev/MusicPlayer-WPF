@@ -5,30 +5,35 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MusicPlayer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded">
-    <DockPanel>
+        Title="MainWindow" Height="500" Width="800" Loaded="Window_Loaded">
+    <DockPanel Margin="0,0,0,-149">
         <ToolBar DockPanel.Dock="Top">
             <Button Content="New Playlist" Click="newPlaylistClicked"/>
             <Button Content="Play a song" Click="playASong"/>
 
         </ToolBar>
         <StackPanel Orientation="Vertical">
-            <MediaElement DockPanel.Dock="Left" Width="300" Height="300"  LoadedBehavior="Manual" Name="mediaElement" VerticalAlignment="Top"/>
-            <Slider Name="slider" Background="AntiqueWhite"/>
-            <Label Content="Ten bai hat kjsfkdjsfkjskf" HorizontalAlignment="Center"/>
+            <MediaElement x:Name="mediaElement" LoadedBehavior="Manual" Width="300" Height="300" MediaOpened="MediaPlayer_MediaOpened"></MediaElement>
+
+            <Slider x:Name="slider" Thumb.DragCompleted="DurationSlider_DragCompleted"/>
+            
+            <UniformGrid>
+                <Label x:Name="Duration" Content="00:00" Width="100" HorizontalAlignment="Left" Height="27"/>
+                <Label x:Name="MaxDuration" Content="00:00" Width="100" HorizontalAlignment="Right" HorizontalContentAlignment="Right"/>
+            </UniformGrid>
+           
+            <Label Name="NameOfSong" HorizontalAlignment="Center"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 
                 <Button Content="Repeat"/>
-                <Button Content="Next"/>
-                <Button Content="Play/Pause"/>
-                <Button Content="Previous"/>
-                <Button Content="Shuffle"/>
+                <Button Content="Previous" Click="previousSongButton"/>
+                <Button Content="Play/Pause" Click="play_pauseButton"/>
+                <Button Content="Next" Click="nextSongButton"/>
+                <Button Content="Shuffle" Click="usingShuffle"/>
                
             </StackPanel>
         </StackPanel>
-        
-        <ListView  Name="mPlaylistListView">
-            
-        </ListView>
+
+        <ListView  Name="mPlaylistListView" SelectionChanged="playlistChangedSelection"/>
     </DockPanel>
 </Window>
