@@ -16,6 +16,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Xml;
+using System.Configuration;
 
 namespace MusicPlayer
 {
@@ -31,8 +33,11 @@ namespace MusicPlayer
 
         bool _isPlaying = false;
         bool _isShuffleEnable = false;
+        bool _isRepeatEnable = false;
+
 
         BindingList<string> _playlist = new BindingList<string>();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -41,7 +46,36 @@ namespace MusicPlayer
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             NameOfSong.Content = "Chưa chọn bài hát";
+            LoadAppConfig();
 
+            this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
+
+        }
+
+        private void LoadAppConfig()
+        {
+            var url = System.AppDomain.CurrentDomain.BaseDirectory + "/appConfig.xml";
+            if (File.Exists(url))
+            {
+                loadPlaylist(url);
+                MessageBox.Show("Previous Playlist Loaded");
+            }
+        }
+
+        void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.N) //next
+            {
+                playNextSong();
+            }
+            else if (e.Key == Key.B) //back
+            {
+                playPreviousSong();
+            } 
+            else if (e.Key == Key.P) //playPause option 
+            {
+                play_pauseMedia();
+            }
         }
 
         private string getNameBySplitPath(string path)
@@ -134,17 +168,23 @@ namespace MusicPlayer
             }
         }
 
-        private void play_pauseButton(object sender, RoutedEventArgs e)
+        private void play_pauseMedia()
         {
-           if (_isPlaying)
+            if (_isPlaying)
             {
                 mediaElement.Pause();
-            } else
+            }
+            else
             {
                 mediaElement.Play();
             }
 
             _isPlaying = !_isPlaying;
+        }
+
+        private void play_pauseButton(object sender, RoutedEventArgs e)
+        {
+            play_pauseMedia();
         }
 
         private void playlistChangedSelection(object sender, SelectionChangedEventArgs e)
@@ -167,7 +207,7 @@ namespace MusicPlayer
             return random.Next(min, max);
         }
 
-        private void nextSongButton(object sender, RoutedEventArgs e)
+        private void playNextSong()
         {
             int index;
             if (_isShuffleEnable)
@@ -175,21 +215,50 @@ namespace MusicPlayer
                 index = randomNumberWithRange(0, _playlist.Count());
                 mPlaylistListView.SelectedIndex = index;
                 playFromPlaylist(index);
-            } else
+            }
+            else
             {
                 index = mPlaylistListView.SelectedIndex + 1;
-                
+
                 if (index < _playlist.Count())
                 {
                     mPlaylistListView.SelectedIndex = index;
                     playFromPlaylist(index);
-                } else
+                }
+                else
                 {
-                    index = 0;
-                    mPlaylistListView.SelectedIndex = index;
-                    playFromPlaylist(index);
+                    if (_isRepeatEnable)
+                    {
+                        index = 0;
+                        mPlaylistListView.SelectedIndex = index;
+                        playFromPlaylist(index);
+                    } else
+                    {
+                        MessageBox.Show("End of Playlist", "Alert");
+                    }
                 }
             }
+        }
+
+        private void nextSongButton(object sender, RoutedEventArgs e)
+        {
+            playNextSong();
+        }
+
+        private void playPreviousSong()
+        {
+            int index = mPlaylistListView.SelectedIndex;
+            if (index == 0)
+            {
+                index = _playlist.Count() - 1;
+                mPlaylistListView.SelectedIndex = index;
+            }
+            else
+            {
+                index--;
+                mPlaylistListView.SelectedIndex = index;
+            }
+            playFromPlaylist(index);
         }
 
         private void usingShuffle(object sender, RoutedEventArgs e)
@@ -199,18 +268,104 @@ namespace MusicPlayer
 
         private void previousSongButton(object sender, RoutedEventArgs e)
         {
-            int index = mPlaylistListView.SelectedIndex;
-            if (index == 0)
-            {
-                index = _playlist.Count()-1;
-                mPlaylistListView.SelectedIndex = index;
-            } else
-            {
-                index--;
-                mPlaylistListView.SelectedIndex = index;
-            }
-            playFromPlaylist(index);
+            playPreviousSong();
+        }
 
+        private void changeRepeatModeButton(object sender, RoutedEventArgs e)
+        {
+            _isRepeatEnable = !_isRepeatEnable;
+        }
+
+        private void handleMediaEnded(object sender, RoutedEventArgs e)
+        {
+            playNextSong();
+        }
+
+        private void savePlaylist(string fileName)
+        {
+                var doc = new XmlDocument();
+
+                var root = doc.CreateElement("Music_Player");
+                root.SetAttribute("IsPlayingAtIndex", mPlaylistListView.SelectedIndex.ToString());
+                root.SetAttribute("SliderValue", (-1).ToString()); //hard code slider value -> will fix later
+                root.SetAttribute("IsRepeat", _isRepeatEnable.ToString());
+                root.SetAttribute("IsShuffle", _isShuffleEnable.ToString());
+
+                var state = doc.CreateElement("PlayList");
+                root.AppendChild(state);
+
+                foreach(var song in _playlist)
+                {
+                    var line = doc.CreateElement("Line");
+                    line.SetAttribute("Value", $"{song}");
+                    state.AppendChild(line);
+                }
+
+                doc.AppendChild(root);
+                doc.Save(fileName); 
+        }
+
+        private void loadPlaylist(string fileName)
+        {
+            var doc = new System.Xml.XmlDocument();
+            doc.Load(fileName);
+
+            var root = doc.DocumentElement;
+            mPlaylistListView.SelectedIndex = int.Parse(root.Attributes["IsPlayingAtIndex"].Value);
+            _isShuffleEnable = root.Attributes["IsRepeat"].Value == "True" ? true : false;
+            _isRepeatEnable = root.Attributes["IsShuffle"].Value == "True" ? true : false;
+
+            foreach (var song in _playlist)
+            {
+                _playlist.Remove(song);
+            }
+
+            foreach (XmlNode node in root.FirstChild.ChildNodes)
+            {
+
+                string song = node.Attributes["Value"].Value;
+                _playlist.Add(song);
+            }
+            mPlaylistListView.ItemsSource = _playlist;
+        }
+
+
+
+        private void hanldeLoadPlaylistFromXML(object sender, RoutedEventArgs e)
+        {
+            var screen = new Microsoft.Win32.OpenFileDialog();
+            if (screen.ShowDialog() == true)
+            {
+                loadPlaylist(screen.FileName);
+            }
+        }
+
+        private void handleSavePlaylist(object sender, RoutedEventArgs e)
+        {
+            if (_playlist.Count() <= 0)
+            {
+                MessageBox.Show("Can't save! You must have atleast one song in playlist.");
+                return;
+            }
+
+            var screen = new SaveFileDialog();
+
+            if (screen.ShowDialog() == true)
+            {
+                savePlaylist(screen.FileName);
+                MessageBox.Show("Save successfully");
+            }
+        }
+
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            //save app Config 
+
+            if (_playlist.Count() <= 0) return;
+
+            var url = System.AppDomain.CurrentDomain.BaseDirectory + "/appConfig.xml";
+            savePlaylist(url);
+            MessageBox.Show("Appconfig Saved");
         }
     }
 }

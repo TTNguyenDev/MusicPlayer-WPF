@@ -1,0 +1,10 @@
+<Music_Player IsPlayingAtIndex="-1" SliderValue="-1" IsRepeat="False" IsShuffle="False">
+  <PlayList>
+    <Line Value="\\Mac\Home\Desktop\music\01 Nếu Ngày Ấy.mp3" />
+    <Line Value="\\Mac\Home\Desktop\music\house_lo.mp3" />
+    <Line Value="\\Mac\Home\Desktop\music\Khóc thêm lần nữa.mp3" />
+    <Line Value="\\Mac\Home\Desktop\music\Neu-Ngay-Ay-Soobin-Hoang-Son.mp3" />
+    <Line Value="\\Mac\Home\Desktop\music\SỢ YÊU.mp3" />
+    <Line Value="\\Mac\Home\Desktop\music\Song-Gio-Jack-K-ICM.mp3" />
+  </PlayList>
+</Music_Player>
