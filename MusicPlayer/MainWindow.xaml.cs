@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,7 +35,6 @@ namespace MusicPlayer
         bool _isShuffleEnable = false;
         bool _isRepeatEnable = false;
 
-
         BindingList<string> _playlist = new BindingList<string>();
 
         public MainWindow()
@@ -49,7 +48,6 @@ namespace MusicPlayer
             LoadAppConfig();
 
             this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
-
         }
 
         private void LoadAppConfig()
@@ -126,7 +124,6 @@ namespace MusicPlayer
 
         void changeStatus()
         {
-            /* If you want the Slider to Update Regularly Just UnComment the Line Below*/
             slider.Value = mediaElement.Position.TotalSeconds;
             Duration.Content = Milliseconds_to_Minute((long)mediaElement.Position.TotalMilliseconds);
         }
@@ -360,7 +357,6 @@ namespace MusicPlayer
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             //save app Config 
-
             if (_playlist.Count() <= 0) return;
 
             var url = System.AppDomain.CurrentDomain.BaseDirectory + "/appConfig.xml";
